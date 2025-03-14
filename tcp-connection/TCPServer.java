@@ -26,16 +26,57 @@ public class TCPServer{
 
             // We are creating a data input and output stream to read and write data to the client.
 
-            String clientMessage = dataIn.readUTF(); // readUTF reads a string from the input stream
-            System.out.println("Client: " + clientMessage);
+            while (true) {
+                String clientMessage = dataIn.readUTF(); // Read message
+
+                if (clientMessage.equalsIgnoreCase("exit")) {
+                    System.out.println("Client disconnected.");
+                    break;
+                }
+
+                String[] clientMessageArray = clientMessage.split("_");
+
+                if (clientMessageArray == null || clientMessageArray.length < 3) {
+                    dataOut.writeUTF("Invalid input format. Expected format: operation_num1_num2");
+                    dataOut.flush();
+                    continue;
+                }
+
+                String operation = clientMessageArray[0].toLowerCase();
+                int num1;
+                int num2;
+                try {
+                    num1 = Integer.parseInt(clientMessageArray[1]);
+                    num2 = Integer.parseInt(clientMessageArray[2]);
+                } catch (NumberFormatException e) {
+                    dataOut.writeUTF("Invalid number format. Please provide valid integers.");
+                    dataOut.flush();
+                    continue;
+                }
+
+                int result = switch (operation) {
+                    case "add" -> num1 + num2;
+                    case "sub" -> num1 - num2;
+                    case "mul" -> num1 * num2;
+                    case "div" -> num2 != 0 ? num1 / num2 : 0; // Avoid division by zero
+                    default -> throw new IllegalArgumentException("Invalid operation");
+                };
+
+                dataOut.writeUTF("Result: " + result);
+                dataOut.flush();
+            }
+
+            // Lets create an input format which will perfrom certain opertaions based on the input
+
+
 
             String serverMessage = "Hello from the server!";
             dataOut.writeUTF(serverMessage); // writeUTF writes a string to the output stream
 
-            dataIn.close();
-            dataOut.close();
-            clientSocket.close();
-            serverSocket.close();
+            // dataIn.close();
+            // dataOut.close();
+            // clientSocket.close();
+            // serverSocket.close();
 
         } catch (IOException e) {
             e.printStackTrace();
